@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Мои посты{% endblock %}
+
+{% block content %}
+<body>
+    <h1>Привет, {{ username }}! Вот твои посты:</h1>
+
+    {% if posts %}
+        <ul>
+            {% for post in posts %}
+                <li>
+                    <h2>{{ post['title'] }}</h2>
+                    <p>{{ post['body'] }}</p>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>У вас пока нет постов.</p>
+    {% endif %}
+
+    <a href="/">Вернуться на главную</a>
+</body>
+{% endblock %}

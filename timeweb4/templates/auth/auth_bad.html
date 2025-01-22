@@ -1,0 +1,12 @@
+<form method="POST">
+<head>
+    <title>Ошибка авторизации</title>
+</head>
+<body>
+    <h1>Ошибка авторизации</h1>
+    <p>{{ error_message }}</p>
+    <a href="/authorization">Попробовать снова</a>
+</body>
+</form>
+
+<link rel="stylesheet" href="{{ url_for('static', filename= 'css/auth_bad.css') }}">
