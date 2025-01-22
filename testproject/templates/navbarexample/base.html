@@ -1,0 +1,32 @@
+<!--В базовом шаблоне создаётся общий каркас документа, который включает навигационную панель и определяет область для вставки уникального контента.-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Заголовок по умолчанию{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename= 'css/index.css') }}"> <!-- Пример подключения стилей -->
+</head>
+<body>
+    <!-- Навигационная панель -->
+    <nav>
+        <div class="topnav">
+            <a class="active" href="{{ url_for('home') }}">Главная</a>
+<!--            адрес ссылки формируется динамически с помощью функции url_for.-->
+            <a href="{{ url_for('about') }}">О приложении</a>
+            <a href="{{ url_for('contact') }}">Контакты</a>
+            <a class="login" href="{{ url_for('auth') }}">Login</a>
+        </div>
+    </nav>
+
+    <!-- Основной блок страницы -->
+    <main>
+        <div style="padding-left:16px">
+            {% block content %}
+            Этот контент будет заменён на уникальный для каждой страницы.
+            {% endblock %}
+        </div>
+    </main>
+<script src="{{ url_for('static', filename= 'js/main.js') }}"></script>
+</body>
+</html>

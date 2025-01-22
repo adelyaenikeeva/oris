@@ -1,0 +1,18 @@
+{% extends 'crud_example/layout.html' %}
+
+{% block content %}
+    <h1>Блог</h1>
+    <a class="btn btn-primary mb-3" href="{{ url_for('create') }}">Создать новый пост</a>
+    {% for post in posts %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">{{ post['title'] }}</h5>
+                <p class="card-text">{{ post['content'] }}</p>
+                <a class="btn btn-secondary" href="{{ url_for('edit', id=post['id']) }}">Редактировать</a>
+                <form action="{{ url_for('delete', id=post['id']) }}" method="POST" class="d-inline">
+                    <button class="btn btn-danger" type="submit">Удалить</button>
+                </form>
+            </div>
+        </div>
+    {% endfor %}
+{% endblock %}
