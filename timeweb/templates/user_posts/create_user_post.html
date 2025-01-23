@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h1>Создать пост</h1>
+    <form method="POST">
+        <div class="mb-3">
+            <label for="title" class="form-label">Заголовок</label>
+            <input class="form-control" type="text" id="title" name="title" required>
+        </div>
+        <div class="mb-3">
+            <label for="content" class="form-label">Текст</label>
+             <textarea class="form-control" id="content" name="content" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-success">Сохранить</button>
+        <a href="{{ url_for('get_user_posts') }}" class="btn btn-secondary">Назад</a>
+</body>
+</html>

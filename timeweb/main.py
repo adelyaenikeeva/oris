@@ -1,13 +1,12 @@
-import os
-
 from flask import Flask, request, render_template, session, redirect, url_for, flash
 import sqlite3
+import os
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)  # Генерирует случайный 24-байтовый ключ
 
 def get_db_connection():
-    conn = sqlite3.connect('login_password.db')
+    conn = sqlite3.connect('blog.db')
     # Возвращаем строки как "словари"
     conn.row_factory = sqlite3.Row
     return conn
@@ -15,18 +14,18 @@ def get_db_connection():
 @app.route('/authorization', methods=['GET', 'POST'])
 def authorization():
     if request.method == 'POST':
-        login = request.form.get('Login')
-        password = request.form.get('Password')
+        login = request.form.get('login')
+        password = request.form.get('password')
 
         # Подключаемся к базе данных
-        db_lp = sqlite3.connect('login_password.db')
-        cursor_db = db_lp.cursor()
+        conn = sqlite3.connect('blog.db')
+        cursor_db = conn.cursor()
 
         # Используем параметризованный SQL-запрос, чтобы избежать SQL-инъекций.
         # Здесь вместо значений вставляются специальные плейсхолдеры (? в случае SQLite) или их эквиваленты для других СУБД.
         # Значения для этих плейсхолдеров передаются в виде отдельного списка или кортежа.
         # Преимущества:
-        # Защита от SQL-инъекций. Данные из переменных (login, password) не интерпретируются как часть SQL-запроса,
+        # Данные из переменных (login, password) не интерпретируются как часть SQL-запроса,
         # а передаются отдельно — как данные. СУБД автоматически экранирует любые опасные символы вроде одинарных кавычек (')
         # или других, предотвращая возможное выполнение вредоносного SQL-кода.
 
@@ -42,7 +41,7 @@ def authorization():
             return render_template('auth/authorization.html', error_message="Неверный пароль!")
 
         # # Если логин и пароль верны, извлекаем роль пользователя
-        # cursor_db.execute('SELECT role FROM passwords WHERE login = ?', (login,))
+        # cursor_db.execute('SELECT role FROM user_profile WHERE login = ?', (login,))
         # role = cursor_db.fetchone()[0]
         #
         # # Сохраняем данные в сессии только после успешной авторизации
@@ -50,7 +49,7 @@ def authorization():
         # session['role'] = role
 
         # Закрываем подключение к базе данных
-        db_lp.close()
+        conn.close()
 
         # Если всё прошло успешно
         return redirect(url_for('index'))
@@ -60,16 +59,17 @@ def authorization():
 @app.route('/registration', methods=['GET', 'POST'])
 def registration():
    if request.method == 'POST':
-       Login = request.form.get('Login')
-       Password = request.form.get('Password')
+       login = request.form.get('login')
+       password = request.form.get('password')
 
-       db_lp = sqlite3.connect('login_password.db')
-       cursor_db = db_lp.cursor()
+       conn = sqlite3.connect('blog.db')
+       cursor_db = conn.cursor()
 
-       cursor_db.execute('INSERT INTO passwords (login, password) VALUES (?, ?)', (Login, Password))
+       cursor_db.execute('INSERT INTO passwords (login, password) VALUES (?, ?)', (login, password))
+       cursor_db.execute('INSERT INTO user_profile (login) VALUES (?)', (login, ))
 
-       db_lp.commit()
-       db_lp.close()
+       conn.commit()
+       conn.close()
 
        return redirect(url_for('authorization'))
 
@@ -92,11 +92,26 @@ def get_users():
 
 @app.route('/account', methods=('GET', 'POST'))
 def account():
-    return render_template('account/account.html')
+    conn = get_db_connection()
+    current_login = session['username']
+    user = conn.execute('SELECT login, name, email FROM user_profile WHERE login = ?', (current_login,)).fetchone()
 
-# Страница создания нового поста
-@app.route('/create_users', methods=('GET', 'POST'))
-def create_users():
+    if request.method == 'POST':
+        login = request.form.get('login')
+        name = request.form.get('name')
+        email = request.form.get('email')
+
+        conn.execute('UPDATE user_profile SET name = ?, email = ? WHERE login = ?', (name, email, current_login))
+        conn.commit()
+        conn.close()
+        flash('Данные успешно обновлены')
+        return redirect(url_for('account'))
+
+    return render_template('account/account.html', user=user)
+
+# Страница создания нового пользователя
+@app.route('/users/create_user', methods=('GET', 'POST'))
+def create_user():
     if request.method == 'POST':
         login = request.form.get('login')
         password = request.form.get('password')
@@ -108,30 +123,30 @@ def create_users():
 
         return redirect(url_for('get_users'))
 
-    return render_template('create.html')
+    return render_template('users/create_user.html')
 
-# Страница редактирования поста
-@app.route('/<int:id>/edit', methods=('GET', 'POST'))
-def edit(id):
+# Страница редактирования пользователя
+@app.route('/users/<string:login>/edit_user', methods=('GET', 'POST'))
+def edit_user(login):
     conn = get_db_connection()
-    post = conn.execute('SELECT * FROM posts WHERE id = ?', (id,)).fetchone()
+    user = conn.execute('SELECT * FROM passwords WHERE login = ?', (login,)).fetchone()
 
     if request.method == 'POST':
-        title = request.form.get('title')
-        content = request.form.get('content')
+        new_login = request.form.get('login')
+        new_password = request.form.get('password')
 
-        conn.execute('UPDATE posts SET title = ?, content = ? WHERE id = ?', (title, content, id))
+        conn.execute('UPDATE passwords SET login = ?, password = ? WHERE login = ?', (new_login, new_password, login))
         conn.commit()
         conn.close()
         return redirect(url_for('get_users'))
 
-    return render_template('edit.html', post=post)
+    return render_template('users/edit_user.html', user=user)
 
-# Удаление поста
-@app.route('/<int:id>/delete', methods=('POST',))
-def delete(id):
+# Удаление пользователя
+@app.route('/user/<string:login>/delete_user', methods=('POST',))
+def delete_user(login):
     conn = get_db_connection()
-    conn.execute('DELETE FROM posts WHERE id = ?', (id,))
+    conn.execute('DELETE FROM passwords WHERE login = ?', (login,))
     conn.commit()
     conn.close()
     flash('Post has been deleted.')
@@ -144,6 +159,13 @@ def logout():
     session.clear()  # Очистка всех данных сессии
     return redirect(url_for('index'))
 
+@app.route('/user_posts')
+def get_user_posts():
+    return render_template('user_posts/user_posts.html')
+
+@app.route('/create_user_post', methods=('GET', 'POST'))
+def create_user_post():
+    return render_template('user_posts/create_user_post.html')
 
 # @app.route('/user_posts')
 # def user_posts():

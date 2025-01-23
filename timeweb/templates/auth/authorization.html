@@ -5,10 +5,10 @@
 {% block content %}
 <form method="POST">
   <div class="container">
-    <label for="Login"><b>Логин</b></label>
-    <input type="text" placeholder="Введите логин" name="Login" required>
-    <label for="Password"><b>Пароль</b></label>
-    <input type="password" placeholder="Введите пароль" name="Password" required>
+    <label for="login"><b>Логин</b></label>
+    <input type="text" placeholder="Введите логин" id="login" name="login" required>
+    <label for="password"><b>Пароль</b></label>
+    <input type="password" placeholder="Введите пароль" id="password" name="password" required>
     <button type="submit">Войти</button>
    <div class="container">
     <span class="reg"> <a href="{{ url_for('registration') }}">Регистрация</a></span>
