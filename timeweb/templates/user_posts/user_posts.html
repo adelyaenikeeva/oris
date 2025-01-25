@@ -7,18 +7,18 @@
 <a class="btn btn-primary mb-3" href="{{ url_for('create_user_post') }}">Создать пост</a>
     <h1>Привет, {{session.get('username')}}! Вот твои посты:</h1>
 
-<!--    {% if posts %}-->
-<!--        <ul>-->
-<!--            {% for post in posts %}-->
-<!--                <li>-->
-<!--                    <h2>{{ post['title'] }}</h2>-->
-<!--                    <p>{{ post['body'] }}</p>-->
-<!--                </li>-->
-<!--            {% endfor %}-->
-<!--        </ul>-->
-<!--    {% else %}-->
-<!--        <p>У вас пока нет постов.</p>-->
-<!--    {% endif %}-->
+    <h1>Все посты</h1>
+        <ul>
+            {% for post in posts %}
+            <li>
+                <h2>{{ post['title'] }} (Автор: {{ post['login'] }})</h2>
+                <p>{{ post['content'] }}</p>
+                {% if post['image_path'] %}
+                <img src="{{ post['image_path'] }}" alt="Картинка поста" width="300">
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
 
     <a href="/">Вернуться на главную</a>
 </body>

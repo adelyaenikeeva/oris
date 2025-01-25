@@ -3,15 +3,6 @@ import sqlite3
 conn = sqlite3.connect('blog.db')
 cursor = conn.cursor()
 
-cursor.execute('''
-                CREATE TABLE IF NOT EXISTS passwords(
-                login TEXT PRIMARY KEY,
-                password TEXT NOT NULL)
-''')
-
-# Включаем поддержку внешних ключей
-cursor.execute('PRAGMA foreign_keys = ON')
-
 # добавление столбца
 # Убирая NOT NULL, вы позволяете столбцу role принимать значения NULL, что означает, что значение может быть "пустым" (неопределенным).
 # cursor.execute('''ALTER TABLE passwords ADD COLUMN role TEXT''')
@@ -34,15 +25,28 @@ cursor.execute('PRAGMA foreign_keys = ON')
 # автоматически удалены. Таким образом, это помогает поддерживать целостность данных: система автоматически удаляет связанные
 # записи, чтобы не осталось "висячих" ссылок.
 
+# cursor.execute('''DROP TABLE tags''')
+
+cursor.execute('''
+                CREATE TABLE IF NOT EXISTS passwords(
+                login TEXT PRIMARY KEY,
+                password TEXT NOT NULL)
+''')
+
+# Включаем поддержку внешних ключей
+cursor.execute('PRAGMA foreign_keys = ON')
+
 # удаление таблицы
-# cursor.execute('''DROP TABLE posts''')
+# cursor.execute('''DROP TABLE passwords''')
+# cursor.execute('''DROP TABLE user_profile''')
+
 cursor.execute('''
             CREATE TABLE IF NOT EXISTS user_profile (
                 user_id INTEGER PRIMARY KEY AUTOINCREMENT, -- Уникальный ID пользователя
                 name TEXT, -- Имя пользователя
-                email TEXT, -- Email пользователя
+                email TEXT UNIQUE, -- Email пользователя
                 role TEXT DEFAULT 'user',
-                login TEXT NOT NULL, -- Логин, связанный с таблицей passwords
+                login TEXT NOT NULL UNIQUE,        -- Логин, который должен быть уникальным
                 FOREIGN KEY (login) REFERENCES passwords(login) ON DELETE CASCADE
 )
 ''')
@@ -53,10 +57,27 @@ cursor.execute('''
                 user_id INTEGER,
                 title TEXT NOT NULL,
                 content TEXT NOT NULL,
-                image_path TEXT, 
+                image_path TEXT,
+                tag TEXT,
                 FOREIGN KEY (user_id) REFERENCES user_profile (user_id) ON DELETE CASCADE
             )
 ''')
+
+# cursor.execute('''
+#             CREATE TABLE IF NOT EXISTS tags (
+#                 tag_id INTEGER PRIMARY KEY AUTOINCREMENT,
+#                 name TEXT NOT NULL UNIQUE
+#             )
+# ''')
+
+# cursor.execute('''
+#             CREATE TABLE IF NOT EXISTS post_tags (
+#                 tag_id INTEGER PRIMARY KEY AUTOINCREMENT,
+#                 post_id INTEGER,
+#                 name TEXT NOT NULL,
+#                 FOREIGN KEY (post_id) REFERENCES posts (post_id) ON DELETE CASCADE
+#             )
+# ''')
 
 
 conn.commit()
