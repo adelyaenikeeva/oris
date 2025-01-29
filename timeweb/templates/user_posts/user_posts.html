@@ -16,7 +16,12 @@
                 {% if post['image_path'] %}
                 <img src="{{ post['image_path'] }}" alt="Картинка поста" width="300">
                 {% endif %}
-            </li>
+
+                <!-- Отображение тегов -->
+                {% if post['tags'] %}
+                <p><strong>Теги:</strong> {{ post['tags'] }}</p>
+                {% endif %}
+                </li>
             {% endfor %}
         </ul>
 

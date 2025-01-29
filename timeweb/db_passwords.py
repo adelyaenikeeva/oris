@@ -25,7 +25,10 @@ cursor = conn.cursor()
 # автоматически удалены. Таким образом, это помогает поддерживать целостность данных: система автоматически удаляет связанные
 # записи, чтобы не осталось "висячих" ссылок.
 
-# cursor.execute('''DROP TABLE tags''')
+cursor.execute('''DROP TABLE posts''')
+# удаление таблицы
+# cursor.execute('''DROP TABLE post_tags''')
+# cursor.execute('''DROP TABLE user_profile''')
 
 cursor.execute('''
                 CREATE TABLE IF NOT EXISTS passwords(
@@ -36,10 +39,8 @@ cursor.execute('''
 # Включаем поддержку внешних ключей
 cursor.execute('PRAGMA foreign_keys = ON')
 
-# удаление таблицы
-# cursor.execute('''DROP TABLE passwords''')
-# cursor.execute('''DROP TABLE user_profile''')
-
+# Связь "один к одному" между таблицами passwords и user_profile реализована через поле login.
+# Каждому логину в таблице passwords соответствует ровно один профиль в таблице user_profile.
 cursor.execute('''
             CREATE TABLE IF NOT EXISTS user_profile (
                 user_id INTEGER PRIMARY KEY AUTOINCREMENT, -- Уникальный ID пользователя
@@ -51,6 +52,9 @@ cursor.execute('''
 )
 ''')
 
+# Таблица user_profile имеет связь "один ко многим" с таблицей posts, поскольку один пользователь может создавать несколько постов,
+# но каждый пост ассоциирован только с одним пользователем. Это реализуется через поле user_id в таблице posts,
+# которое является внешним ключом, указывающим на уникальный идентификатор пользователя.
 cursor.execute('''
             CREATE TABLE IF NOT EXISTS posts (
                 post_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -58,27 +62,31 @@ cursor.execute('''
                 title TEXT NOT NULL,
                 content TEXT NOT NULL,
                 image_path TEXT,
-                tag TEXT,
                 FOREIGN KEY (user_id) REFERENCES user_profile (user_id) ON DELETE CASCADE
             )
 ''')
 
-# cursor.execute('''
-#             CREATE TABLE IF NOT EXISTS tags (
-#                 tag_id INTEGER PRIMARY KEY AUTOINCREMENT,
-#                 name TEXT NOT NULL UNIQUE
-#             )
-# ''')
+# Таблица тегов
+# UNIQUE гарантирует отсутствие дубликатов тегов.
+cursor.execute('''
+            CREATE TABLE IF NOT EXISTS tags (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE
+)
+''')
 
-# cursor.execute('''
-#             CREATE TABLE IF NOT EXISTS post_tags (
-#                 tag_id INTEGER PRIMARY KEY AUTOINCREMENT,
-#                 post_id INTEGER,
-#                 name TEXT NOT NULL,
-#                 FOREIGN KEY (post_id) REFERENCES posts (post_id) ON DELETE CASCADE
-#             )
-# ''')
-
+# Связующая таблица для posts и tags
+# Связь "многие ко многим" реализуется через связующую таблицу post_tags.
+# Один пост может иметь много тегов, и один тег может быть связан с многими постами.
+cursor.execute('''
+            CREATE TABLE IF NOT EXISTS post_tags (
+                post_id INTEGER NOT NULL,
+                tag_id INTEGER NOT NULL,
+                FOREIGN KEY (post_id) REFERENCES posts (post_id) ON DELETE CASCADE,
+                FOREIGN KEY (tag_id) REFERENCES tags (id) ON DELETE CASCADE,
+                PRIMARY KEY (post_id, tag_id)
+            )
+''')
 
 conn.commit()
 conn.close()
